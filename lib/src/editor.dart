@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:image_editor/src/channel.dart';
@@ -62,10 +63,10 @@ class ImageEditor {
     }
   }
 
-  static Future<File?> editFileImageAndGetFile({
-    required File file,
-    required ImageEditorOption imageEditorOption,
-  }) async {
+  static Future<File?> editFileImageAndGetFile(
+      {required File file,
+      required ImageEditorOption imageEditorOption,
+      String? customFileName}) async {
     File? tmp = file;
     for (final group in imageEditorOption.groupList) {
       if (group.canIgnore) {
@@ -79,17 +80,17 @@ class ImageEditor {
 
       editOption.outputFormat = imageEditorOption.outputFormat;
 
-      final target = await _createTmpFilePath();
+      final target = await _createTmpFilePath(customName: customFileName);
 
       tmp = await handler.handleAndGetFile(editOption, target);
     }
     return tmp;
   }
 
-  static Future<File> editImageAndGetFile({
-    required Uint8List image,
-    required ImageEditorOption imageEditorOption,
-  }) async {
+  static Future<File> editImageAndGetFile(
+      {required Uint8List image,
+      required ImageEditorOption imageEditorOption,
+      String? customFileName}) async {
     Uint8List? tmp = image;
 
     for (final group in imageEditorOption.groupList) {
@@ -107,7 +108,7 @@ class ImageEditor {
       tmp = await handler.handleAndGetUint8List(editOption);
     }
 
-    final file = File(await _createTmpFilePath());
+    final file = File(await _createTmpFilePath(customName: customFileName));
 
     if (tmp != null) {
       await file.writeAsBytes(tmp);
@@ -116,9 +117,10 @@ class ImageEditor {
     return file;
   }
 
-  static Future<String> _createTmpFilePath() async {
+  static Future<String> _createTmpFilePath({String? customName}) async {
     final cacheDir = await NativeChannel.getCachePath();
     final name = DateTime.now().millisecondsSinceEpoch;
-    return "${cacheDir.path}/$name";
+
+    return "${cacheDir.path}/$name$customName";
   }
 }
